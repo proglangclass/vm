@@ -1,0 +1,5 @@
+** Virtual machine built during the http://proglangmasterclass.com/ **
+
+This package contains a virtual machine and a JIT compiler for a subset of the language at https://github.com/proglangclass/interpreter.
+
+(c) Marc-Andre Cournoyer
