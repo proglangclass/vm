@@ -8,7 +8,7 @@
 #define STACK_PUSH(I)  do {                             \
                           assert(sp-stack < STACK_MAX); \
                           *(++sp) = (I);                \
-                          retain(*sp); } while(0)
+                       } while(0)
 #define STACK_POP()    (*sp--)
 
 
@@ -22,7 +22,6 @@ void run(long literals[], byte instructions[]) {
   
   // Setup the runtime
   Object *self = Object_new();
-  retain(self); // make sure self wont be released
   
   // Start processing instructions
   while (1) {
@@ -30,22 +29,19 @@ void run(long literals[], byte instructions[]) {
       case CALL: {
         ip++; // advance to operand (message literal index)
         char *message = (char *)literals[*ip];
-        ip++;
+        ip++; // advance to operand (# of args)
+        
         int argc = *ip;
         assert(argc < 10); // HACK max 10 args
         Object *argv[10];
-        int i;
         
         // Pop all args from the stack and compile as an array
+        int i;
         for (i = 0; i < argc; ++i) argv[0] = STACK_POP();
         Object *receiver = STACK_POP();
         
         Object *result = call(receiver, message, argv, argc);
         STACK_PUSH(result);
-        
-        // Release objects
-        for (i = 0; i < argc; ++i) release(argv[0]);
-        release(receiver);
         
         break;
       }
@@ -92,9 +88,6 @@ void run(long literals[], byte instructions[]) {
         
         STACK_PUSH(Number_new(Number_value(a) + Number_value(b)));
         
-        release(a);
-        release(b);
-        
         break;
       }
       case JUMP_UNLESS: {
@@ -104,60 +97,23 @@ void run(long literals[], byte instructions[]) {
         
         if (!Object_is_true(test)) ip += offset;
         
-        release(test);
-        
         break;
       }
       case RETURN:
-        goto cleanup;
-        break;
+        return;
         
     }
     ip++;
   }
-  
-  int i;
-cleanup:
-  // Release all local values (variable & stack)
-  release(self);
-  for(i = 0; i < STACK_MAX; ++i) if (locals[i]) release(locals[i]);
-  while (sp > stack) release(STACK_POP());
 }
 
 int main (int argc, char const *argv[]) {
-  // Original code:
-  // print("the answer is:")
-  // a = 30 + 2
-  // if true
-  //   print(a)
-  // end
-  
-  // long can store a pointer (a numbers too).
+  // long can store a pointer (and numbers too).
   long literals[] = {
-    /* [0] */ (long) "the answer is:",
-    /* [1] */ (long) "print",
-    /* [2] */ (long) 30,
-    /* [3] */ (long) 2
+    
   };
   
-  // locals
-  // [0] a
-  
-  byte instructions[] = {
-    /* 03 */ PUSH_SELF,
-    /* 02 */ PUSH_STRING, 0,    // "the answer is:"
-    /* 00 */ CALL,        1, 1, // call "print" w/ 1 arg
-    /* 01 */ PUSH_NUMBER, 2,    // 30
-    /* 01 */ PUSH_NUMBER, 3,    // 2
-    /* 09 */ ADD,
-    /* 07 */ SET_LOCAL,   0,    // a
-    /* 05 */ PUSH_BOOL,   1,    // true
-    /* 08 */ JUMP_UNLESS, 6,    // jump 6 more instructions unless true
-    /* 03 */ PUSH_SELF,
-    /* 06 */ GET_LOCAL,   0,    // a
-    /* 00 */ CALL,        1, 1, // call "print" w/ 1 arg
-    /* 10 */ RETURN
-  };
+  byte instructions[] = {  };
   
   init_runtime();
   run(literals, instructions);
