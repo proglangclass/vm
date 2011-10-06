@@ -27,8 +27,8 @@ void run(long literals[], byte instructions[]) {
   while (1) {
     switch (*ip) {
       case CALL: {
-        ip++; // advance to operand (message literal index)
-        char *message = (char *)literals[*ip];
+        ip++; // advance to operand (method literal index)
+        char *method = (char *)literals[*ip];
         ip++; // advance to operand (# of args)
         
         int argc = *ip;
@@ -40,7 +40,7 @@ void run(long literals[], byte instructions[]) {
         for (i = 0; i < argc; ++i) argv[0] = STACK_POP();
         Object *receiver = STACK_POP();
         
-        Object *result = call(receiver, message, argv, argc);
+        Object *result = call(receiver, method, argv, argc);
         STACK_PUSH(result);
         
         break;
