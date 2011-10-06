@@ -65,6 +65,7 @@ assemble:
   size = ptr - start;
   JitFunc *func = (JitFunc *)(byte *)mmap(NULL, size, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANON, -1, 0);
   memcpy(func, start, sizeof(byte) * size);
+  free(start);
   
   return func;
 }
