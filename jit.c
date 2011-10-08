@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/mman.h>
 #include <string.h>
 #include "opcode.h"
 #include "funcalloc.h"
@@ -24,7 +23,7 @@ typedef int (JitFunc)();
 // Get and release a register.
 #define REG_POP()           registers[--ri]
 
-// Compile instructions to x86-64 machine code and return a pointer to a function.
+// Compile instructions to x86-64 machine code and returns a pointer to a function.
 JitFunc *compile(long literals[], byte instructions[], int *size) {
   byte *ip = instructions;
   
@@ -34,7 +33,7 @@ JitFunc *compile(long literals[], byte instructions[], int *size) {
   int ri = 0; // register index
   
   // Setup stack frame (C calling convention)
-  EMIT(0x55);                        // push   %ebp
+  EMIT(0x55);                          // push   %ebp
   EMIT(0x48); EMIT(0x89); EMIT(0xe5);  // movq   %rsp,%rbp
   
   while (1) {
@@ -43,7 +42,7 @@ JitFunc *compile(long literals[], byte instructions[], int *size) {
         // mov    [int],%eax
         EMIT(0xB8 + REG_PUSH());
         ++ip; // advance to operand (literal)
-        EMIT_INT((long)literals[*ip]);
+        EMIT_INT((int)literals[*ip]);
         break;
         
       case ADD: {
