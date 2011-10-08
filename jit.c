@@ -33,29 +33,27 @@ JitFunc *compile(long literals[], byte instructions[], int *size) {
   int ri = 0; // register index
   
   // Setup stack frame (C calling convention)
-  EMIT(0x55);                          // push   %ebp
-  EMIT(0x48); EMIT(0x89); EMIT(0xe5);  // movq   %rsp,%rbp
+  EMIT(0x55);                                       // push   %ebp
+  EMIT(0x48); EMIT(0x89); EMIT(0xe5);               // movq   %rsp,%rbp
   
   while (1) {
     switch (*ip) {
-      case PUSH_NUMBER:
-        // mov    [int],%eax
-        EMIT(0xB8 + REG_PUSH());
+      case PUSH_NUMBER: {
         ++ip; // advance to operand (literal)
-        EMIT_INT((int)literals[*ip]);
-        break;
+        int number = (int)literals[*ip];
+        EMIT(0xB8 + REG_PUSH()); EMIT_INT(number);  // mov    [int],%eax
         
+        break;
+      }
       case ADD: {
-        // add    %ebx,%eax
-        EMIT(0x01);
         byte reg1 = REG_POP();
         byte reg2 = REG_POP();
-        EMIT_REG2REG(reg1, reg2);
+        EMIT(0x01); EMIT_REG2REG(reg1, reg2);      // add    %ebx,%eax
         break;
       }
       case RETURN:
-        EMIT(0xC9);  // leave
-        EMIT(0xC3);  // ret
+        EMIT(0xC9);                                // leave
+        EMIT(0xC3);                                // ret
         goto assemble;
     }
     ip++;
