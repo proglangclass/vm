@@ -18,6 +18,45 @@ typedef int (JitFunc)();
 #define EMIT_INT(i)          EMIT_T(i, int)
 #define EMIT_REG2REG(r1,r2)  EMIT(0xC0 | r1 << 3 | r2);
 
+// Emit x86-64 machine code dynamicaly
+void *precompile() {
+  // Allocate memory to write the instructions to
+  byte *start, *ptr;
+  start = ptr = malloc(4096);
+  
+  // Emit x86-64 machine code the equivalent of:
+  // int *func() {
+  //   return 30 + 2;
+  // }
+  
+  // Setup stack frame (C calling convention)
+  EMIT(0x55);                            // push   %ebp
+  EMIT(0x48); EMIT(0x89); EMIT(0xe5);    // movq   %rsp,%rbp
+  
+  EMIT(0xB8 + EAX); EMIT_INT(30);        // mov    [int],%eax
+  EMIT(0xB8 + ECX); EMIT_INT(2);         // mov    [int],%ecx
+  EMIT(0x01); EMIT_REG2REG(ECX, EAX);    // add    %ecx,%eax
+  
+  EMIT(0xC9);                            // leave
+  EMIT(0xC3);                            // ret
+  
+  // Copy the instructions to an executable memory address
+  int size = ptr - start;
+  JitFunc *func = (JitFunc *)funcalloc(size);
+  memcpy(func, start, sizeof(byte) * size);
+  free(start);
+  
+  // Execute the compiled function
+  int value = func();
+  printf("> %d\n", value);
+  
+  // Release the function
+  funcfree(func, size);
+}
+
+
+/////// Here we compile our VM bytecode to x86-64 machine code ///////
+
 // Set a register as being in use
 #define REG_PUSH()          registers[ri++]
 // Get and release a register.
