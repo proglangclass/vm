@@ -12,7 +12,7 @@
 #define STACK_POP()    (*sp--)
 
 
-void run(long literals[], byte instructions[]) {
+void run(void *literals[], byte instructions[]) {
   byte    *ip = instructions;      // instruction pointer
   
   Object  *stack[STACK_MAX];       // the famous stack
@@ -33,8 +33,7 @@ void run(long literals[], byte instructions[]) {
 }
 
 int main (int argc, char const *argv[]) {
-  // long can store a pointer (and numbers too).
-  long literals[] = {
+  void *literals[] = {
     
   };
   
