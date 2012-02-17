@@ -21,8 +21,8 @@ typedef int (JitFunc)();
 // Emit x86-64 machine code dynamicaly
 void *precompile() {
   // Allocate memory to write the instructions to
-  byte *start, *ptr;
-  start = ptr = malloc(4096);
+  byte *ptr = funcalloc(4096);
+  JitFunc *func = (JitFunc *)ptr;
   
   // Emit x86-64 machine code the equivalent of:
   // int *func() {
@@ -40,18 +40,12 @@ void *precompile() {
   EMIT(0xC9);                            // leave
   EMIT(0xC3);                            // ret
   
-  // Copy the instructions to an executable memory address
-  int size = ptr - start;
-  JitFunc *func = (JitFunc *)funcalloc(size);
-  memcpy(func, start, sizeof(byte) * size);
-  free(start);
-  
   // Execute the compiled function
   int value = func();
   printf("> %d\n", value);
   
   // Release the function
-  funcfree(func, size);
+  funcfree(func, 4096);
 }
 
 
@@ -62,12 +56,11 @@ void *precompile() {
 // Get and release a register.
 #define REG_POP()           registers[--ri]
 
-// Compile instructions to x86-64 machine code and returns a pointer to a function.
-JitFunc *compile(long literals[], byte instructions[], int *size) {
+// Compile instructions to x86-64 machine code into a pointer to a function.
+void compile(long literals[], byte instructions[], JitFunc *func) {
   byte *ip = instructions;
   
-  byte *start, *ptr;
-  start = ptr = malloc(4096);
+  byte *ptr = (byte *)func;
   byte registers[] = { EAX, ECX, EDX, EBX };
   int ri = 0; // register index
   
@@ -93,18 +86,10 @@ JitFunc *compile(long literals[], byte instructions[], int *size) {
       case RETURN:
         EMIT(0xC9);                                // leave
         EMIT(0xC3);                                // ret
-        goto assemble;
+        return;
     }
     ip++;
   }
-  
-assemble:
-  *size = ptr - start;
-  JitFunc *func = (JitFunc *)funcalloc(*size);
-  memcpy(func, start, sizeof(byte) * *size);
-  free(start);
-  
-  return func;
 }
 
 int main(int argc, char const *argv[]) {
@@ -120,12 +105,16 @@ int main(int argc, char const *argv[]) {
     RETURN,
   };
   
-  int size; // size of the function in memory, passed to funcfree.
-  JitFunc *compiled_function = compile(literals, instructions, &size);
-  printf("> %d\n", compiled_function());
+  // Allocate memory to write the instructions to
+  JitFunc *func = funcalloc(4096);
+
+  // Compile to the function pointer (func)
+  compile(literals, instructions, func);
+  // Execute the function
+  printf("> %d\n", func());
   
   // Release memory used by function
-  funcfree(compiled_function, size);
+  funcfree(func, 4096);
   
   return 0;
 }
