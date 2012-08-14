@@ -10,8 +10,9 @@ enum {
   /* 06 */ GET_LOCAL,     // index        []             [value]
   /* 07 */ SET_LOCAL,     // index        [value]        []
   /* 08 */ JUMP_UNLESS,   // offset       [test]         []
-  /* 09 */ ADD,           //              [a, b]         [result]
-  /* 10 */ RETURN         //              []             []
+  /* 09 */ JUMP,          // offset       []             []
+  /* 10 */ ADD,           //              [a, b]         [result]
+  /* 11 */ RETURN         //              []             []
 };
 
 typedef unsigned char byte; // 1 byte
