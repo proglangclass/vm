@@ -2,6 +2,7 @@
 #include <assert.h>
 #include "runtime.h"
 #include "opcode.h"
+#include "bytecode.h"
 
 // Helpers to play with the stack
 #define STACK_MAX      10
@@ -33,11 +34,8 @@ void run(void *literals[], byte instructions[]) {
 }
 
 int main (int argc, char const *argv[]) {
-  void *literals[] = {
-    
-  };
-  
-  byte instructions[] = {  };
+  void *literals[] = LITERALS;
+  byte instructions[] = INSTRUCTIONS;
   
   init_runtime();
   run(literals, instructions);

@@ -1,0 +1,51 @@
+#!/usr/bin/env ruby -s
+# Script to compile a NotRuby file to Bytecode.
+
+interpreter_path = File.expand_path("../../interpreter", __FILE__)
+
+unless File.directory?(interpreter_path)
+  abort "`interpreter` directory not found.\nMove or clone the interpreter repo at: #{interpreter_path}"
+end
+
+$:.unshift File.expand_path("../../interpreter", __FILE__)
+
+if $h # -h option
+  abort <<USAGE
+Usage:
+
+  ./compile file.rb # compile a file
+  ./compile -e='print("hi")' # compile some code
+
+USAGE
+end
+
+require "compiler"
+require "bytecode_generator"
+require "erb"
+
+if $e
+  code = $e
+else
+  code = File.read(ARGV.first)
+end
+
+result = Compiler.new(BytecodeGenerator).compile(code)
+literals = result[:literals]
+instructions = result[:instructions]
+
+c = ERB.new(<<-'ERB').result(binding)
+/*
+  This file was compiled by the `compile` script.
+  It contains the bytecode for the following code:
+  
+    <%= code.split("\n").join("\n    ") %>
+*/
+
+#define LITERALS { \<% literals.each do |literal| %>
+    (void *) <%= literal.inspect %>, \<% end %>
+  }
+
+#define INSTRUCTIONS { <%= instructions.join(', ') %> }
+ERB
+
+File.write("bytecode.h", c)
