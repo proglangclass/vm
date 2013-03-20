@@ -19,7 +19,7 @@ typedef int (JitFunc)();
 #define EMIT_REG2REG(r1,r2)  EMIT(0xC0 | r1 << 3 | r2);
 
 // Emit x86-64 machine code dynamicaly
-void *precompile() {
+void precompile() {
   // Allocate memory to write the instructions to
   byte *ptr = funcalloc(4096);
   JitFunc *func = (JitFunc *)ptr;
