@@ -27,7 +27,40 @@ void run(void *literals[], byte instructions[]) {
   // Start processing instructions
   while (1) {
     switch (*ip) {
-      
+      case CALL: {
+        ip++; // move to the index of the method name
+        char *method = (char *)literals[*ip];
+
+        ip++; // number of arguments
+        int argc = *ip;
+
+        Object *argv[10]; // number of arguments is limited to 10
+        int i;
+        for (i = 0; i < argc; i++) argv[i] = STACK_POP();
+        Object *receiver = STACK_POP();
+
+        Object *result = call(receiver, method, argv, argc);
+        STACK_PUSH(result);
+
+        break;
+      }
+      case PUSH_NUMBER: {
+        ip++; // move to the operand: index in the literals
+        STACK_PUSH(Number_new((long) literals[*ip]));
+        break;
+      }
+      case PUSH_STRING: {
+        ip++; // move to the operand: index in the literals
+        STACK_PUSH(String_new((char *) literals[*ip]));
+        break;
+      }
+      case PUSH_SELF: {
+        STACK_PUSH(self);
+        break;
+      }
+      case RETURN: {
+        return;
+      }
     }
     ip++;
   }

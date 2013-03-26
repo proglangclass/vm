@@ -11,3 +11,10 @@
   }
 
 #define INSTRUCTIONS { 3, 2, 0, 0, 1, 1, 11 }
+
+/*
+PUSH_SELF,          [self]
+PUSH_STRING, 0,     [self, "hi"]
+CALL,        1, 1   self.print("hi")
+RETURN
+*/
