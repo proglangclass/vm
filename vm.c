@@ -58,6 +58,46 @@ void run(void *literals[], byte instructions[]) {
         STACK_PUSH(self);
         break;
       }
+      case PUSH_NIL: {
+        STACK_PUSH(NilObject);
+        break;
+      }
+      case PUSH_BOOL: {
+        ip++; // operand: 0 = false, 1 = true
+        if (*ip == 0) {
+          STACK_PUSH(FalseObject);
+        } else {
+          STACK_PUSH(TrueObject);
+        }
+        break;
+      }
+      case GET_LOCAL: {
+        ip++; // index of the local in the table
+        STACK_PUSH(locals[*ip]);
+        break;
+      }
+      case SET_LOCAL: {
+        ip++; // index of the local in the table
+        locals[*ip] = STACK_POP();
+        break;
+      }
+      case ADD: {
+        Object *a = STACK_POP();
+        Object *b = STACK_POP();
+
+        STACK_PUSH(Number_new(Number_value(a) + Number_value(b)));
+
+        break;
+      }
+      case JUMP_UNLESS: {
+        ip++; // advance to the offset
+        byte offset = *ip;
+        Object *condition = STACK_POP();
+
+        if (!Object_is_true(condition)) ip += offset;
+
+        break;
+      }
       case RETURN: {
         return;
       }
