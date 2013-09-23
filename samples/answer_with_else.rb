@@ -1,6 +1,6 @@
 print("the answer is:")
 a = 30 + 2
-if false
+if true
   print(a)
 else
   print("no")
