@@ -102,6 +102,14 @@ void run(void *literals[], byte instructions[]) {
 
         break;
       }
+      case JUMP: {
+        ip++; // operand (offset, # of bytes to jump forward)
+        byte offset = *ip;
+
+        ip += offset;
+
+        break;
+      }
     }
     ip++;
   }
