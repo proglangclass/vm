@@ -5,6 +5,7 @@
 #include "bytecode.h"
 
 // Helpers to play with the stack
+#define LOCALS_MAX     10
 #define STACK_MAX      10
 #define STACK_PUSH(I)  do {                             \
                           assert(sp-stack < STACK_MAX); \
@@ -14,12 +15,12 @@
 
 
 void run(void *literals[], byte instructions[]) {
-  byte    *ip = instructions;      // instruction pointer
+  byte    *ip = instructions;       // instruction pointer
   
-  Object  *stack[STACK_MAX];       // the famous stack
-  Object **sp = stack;             // stack pointer
+  Object  *stack[STACK_MAX];        // THE famous stack
+  Object **sp = stack;              // stack pointer, keeps track of current position
   
-  Object  *locals[STACK_MAX] = {}; // where we store our local variables
+  Object  *locals[LOCALS_MAX] = {}; // where we store our local variables
   
   // Setup the runtime
   Object *self = Object_new();
@@ -34,11 +35,15 @@ void run(void *literals[], byte instructions[]) {
 }
 
 int main (int argc, char const *argv[]) {
+  // Get compiled literals table and instructions from bytecode.h
   void *literals[] = LITERALS;
   byte instructions[] = INSTRUCTIONS;
   
   init_runtime();
+  
+  // Run that thing!
   run(literals, instructions);
+
   destroy_runtime();
   
   return 0;
