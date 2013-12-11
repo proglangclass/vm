@@ -10,6 +10,7 @@
 #define STACK_PUSH(I)  do {                             \
                           assert(sp-stack < STACK_MAX); \
                           *(++sp) = (I);                \
+                          retain(*sp);                  \
                        } while(0)
 #define STACK_POP()    (*sp--)
 
@@ -24,6 +25,7 @@ void run(void *literals[], byte instructions[]) {
   
   // Setup the runtime
   Object *self = Object_new();
+  retain(self);
   
   // Start processing instructions
   while (1) {
@@ -70,10 +72,15 @@ void run(void *literals[], byte instructions[]) {
 
         STACK_PUSH(result);
 
+        // Release all the objects
+        for (i = argc - 1; i >= 0; i--) release(argv[i]);
+        release(receiver);
+
         break;
       }
       case RETURN: {
-        return;
+        goto cleanup;
+        break;
       }
       case GET_LOCAL: {
         ip++; // advance operand (local index)
@@ -91,6 +98,9 @@ void run(void *literals[], byte instructions[]) {
 
         STACK_PUSH(Number_new(Number_value(a) + Number_value(b)));
 
+        release(a);
+        release(b);
+
         break;
       }
       case JUMP_UNLESS: {
@@ -99,6 +109,8 @@ void run(void *literals[], byte instructions[]) {
         Object *condition = STACK_POP();
 
         if (!Object_is_true(condition)) ip += offset;
+
+        release(condition);
 
         break;
       }
@@ -113,6 +125,14 @@ void run(void *literals[], byte instructions[]) {
     }
     ip++;
   }
+
+cleanup:
+  release(self);
+  int i;
+  // Release all the local variables
+  for (i = 0; i < LOCALS_MAX; i++) if (locals[i]) release(locals[i]);
+  // Release everything left on the stack
+  while (sp > stack) release(STACK_POP());
 }
 
 int main (int argc, char const *argv[]) {
