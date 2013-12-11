@@ -28,7 +28,80 @@ void run(void *literals[], byte instructions[]) {
   // Start processing instructions
   while (1) {
     switch (*ip) {
-      
+      case PUSH_NUMBER: {
+        ip++; // advance to the operand (literal index)
+        STACK_PUSH(Number_new((long)literals[*ip]));
+        break;
+      }
+      case PUSH_STRING: {
+        ip++; // advance to the operand (literal index)
+        STACK_PUSH(String_new((char *)literals[*ip]));
+        break;
+      }
+      case PUSH_SELF: {
+        STACK_PUSH(self);
+        break;
+      }
+      case PUSH_NIL: {
+        STACK_PUSH(NilObject);
+        break;
+      }
+      case PUSH_BOOL: {
+        ip++; // advance to operand (0 = false, 1 = true)
+        if (*ip == 0) {
+          STACK_PUSH(FalseObject);
+        } else {
+          STACK_PUSH(TrueObject);
+        }
+        break;
+      }
+      case CALL: {
+        ip++; // advance to operand (method name index in literals)
+        char *method = literals[*ip];
+        ip++; // advance to operand (# of args)
+        int argc = *ip;
+        Object *argv[10];
+
+        int i;
+        for (i = 0; i < argc; i++) argv[i] = STACK_POP();
+        Object *receiver = STACK_POP();
+
+        Object *result = call(receiver, method, argv, argc);
+
+        STACK_PUSH(result);
+
+        break;
+      }
+      case RETURN: {
+        return;
+      }
+      case GET_LOCAL: {
+        ip++; // advance operand (local index)
+        STACK_PUSH(locals[*ip]);
+        break;
+      }
+      case SET_LOCAL: {
+        ip++; // local index
+        locals[*ip] = STACK_POP();
+        break;
+      }
+      case ADD: {
+        Object *a = STACK_POP();
+        Object *b = STACK_POP();
+
+        STACK_PUSH(Number_new(Number_value(a) + Number_value(b)));
+
+        break;
+      }
+      case JUMP_UNLESS: {
+        ip++; // operand (offset, # of bytes to jump forward)
+        byte offset = *ip;
+        Object *condition = STACK_POP();
+
+        if (!Object_is_true(condition)) ip += offset;
+
+        break;
+      }
     }
     ip++;
   }
