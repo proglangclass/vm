@@ -63,7 +63,7 @@ void run(void *literals[], byte instructions[]) {
         Object *argv[10];
 
         int i;
-        for (i = 0; i < argc; i++) argv[i] = STACK_POP();
+        for (i = argc - 1; i >= 0; i--) argv[i] = STACK_POP();
         Object *receiver = STACK_POP();
 
         Object *result = call(receiver, method, argv, argc);
